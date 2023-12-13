@@ -1,45 +1,34 @@
 import { Card, Text, Button, ButtonGroup, Avatar, ResourceItem, Badge } from '@shopify/polaris';
 import "./style.scss"
 import { useState, useCallback } from "react";
+import todoRepository from '../../api/repositories/TodoRepository';
 
 
 
-function Todo(item, _, index) {
-  console.log(item)
-  const { id, name, } = item;
-
-
-  const [isCompleted, setIsCompleted] = useState(false);
-  const handleCompleteClick = () => {
-    setIsCompleted(!isCompleted);
-  };
-
+function Todo({ item, handleCompleteClick, handleDeleteTodo }) {
+  const { name, isCompleted } = item;
   return (
     <ResourceItem
-      id={id}
-      sortOrder={index}
+      id={item.id}
+      sortOrder={item.id}
       accessibilityLabel={`View details for ${name}`}
     >
-      <div className='to-do'>
-        <div>
-          <Text variant="bodyMd" fontWeight="light" as="h3">
-            {name}
-          </Text>
-        </div>
-        <div >
-          <ButtonGroup>
-            {isCompleted ? (
-              <Badge tone="success">Done</Badge>
 
-            ) : (
-              <Badge>Pending</Badge>
+      <Text variant="bodyMd" fontWeight="light" as="h3">
+        {name}
+      </Text>
 
-            )}
-            <Button tone="critical" onClick={handleCompleteClick}>Complete</Button>
-            <Button variant="primary" tone="critical">Delete</Button>
-          </ButtonGroup>
-        </div>
-      </div>
+      <ButtonGroup>
+        {isCompleted ? (
+          <Badge tone="success">Done</Badge>
+        ) : (
+          <Badge>Pending</Badge>
+
+        )}
+        <Button tone="critical" onClick={handleCompleteClick} disabled={item.isCompleted}>Complete</Button>
+        <Button variant="primary" tone="critical" onClick={handleDeleteTodo}>Delete</Button>
+      </ButtonGroup>
+
     </ResourceItem>
   );
 

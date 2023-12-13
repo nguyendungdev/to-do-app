@@ -1,10 +1,13 @@
-.Polaris-Box {
-    justify-content: space-between;
+.Polaris-Page-Header--noBreadcrumbs {
+    width: 100%;
 }
 
-.to-do {
+.Polaris-InlineGrid {
     width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+
+    .Polaris-Box {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
 }

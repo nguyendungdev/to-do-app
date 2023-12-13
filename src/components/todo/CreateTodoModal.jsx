@@ -1,7 +1,6 @@
 import { TextField, Modal, } from '@shopify/polaris';
 
-function CreateTodoModal({ isCreate, toggleModal, value, handleChange }) {
-
+function CreateTodoModal({ isCreate, toggleModal, handleCreateTodo, value, handleChange }) {
     return (
         <Modal
             open={isCreate}
@@ -9,7 +8,7 @@ function CreateTodoModal({ isCreate, toggleModal, value, handleChange }) {
             title="Create Todo"
             primaryAction={{
                 content: 'Create',
-                onAction: toggleModal,
+                onAction: handleCreateTodo,
             }}
             secondaryActions={{
                 content: 'Close',

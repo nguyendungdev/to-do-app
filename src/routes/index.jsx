@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom"
-import MainLayout from "../components/layouts/MainLayout"
 import Error500 from '../components/errors/Error500';
+import ListTodoPage from "../pages/todo/ListTodoPage";
+import MainLayout from "../components/layouts/MainLayout";
 
 const router = createBrowserRouter([
     {
@@ -9,8 +10,8 @@ const router = createBrowserRouter([
         errorElement: <Error500 />,
         children: [
             {
-                path: "/todos/",
-                element: <MainLayout />,
+                path: "/todo",
+                element: <ListTodoPage />,
             },
         ]
     }

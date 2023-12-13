@@ -1,40 +1,73 @@
-const BASE_URL = `http://localhost:3000/api/todo`;
+import env from "../../utils/env";
 
-const todoRepository = {
+
+class TodoRepository {
+
+    constructor() {
+        this.baseUrl = `${env.apiUrl}/todo`;
+    }
     async getAllTodos() {
         try {
-            const response = await fetch(BASE_URL);
-            if (!response.ok) {
-                throw new Error('Failed to fetch todos');
-            }
+            console.log(this.baseUrl)
+            const response = await fetch(`${this.baseUrl}?sort=desc`);
             const todos = await response.json();
             return todos;
         } catch (error) {
             throw error;
         }
-    },
+    }
 
     async createTodo(newTodo) {
-        try {
-            const response = await fetch(BASE_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(newTodo),
-            });
-            if (!response.ok) {
-                throw new Error('Failed to create todo');
-            }
-            const createdTodo = await response.json();
-            return createdTodo;
-        } catch (error) {
-            console.error('Error creating todo:', error.message);
-            throw error;
-        }
-    },
+        const response = await fetch(this.baseUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newTodo),
+        });
 
-    // Add other CRUD operations as needed
+        const createdTodo = await response.json();
+        return createdTodo;
+    }
+
+    deteleTodo(id) {
+        return fetch(`${this.baseUrl}/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+    }
+
+    deleteTodoList(ids) {
+        return fetch(`${this.baseUrl}?ids=${ids}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+    }
+
+    updateStatusTodo(id) {
+        return fetch(`${this.baseUrl}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+    }
+
+    updateMulti(ids) {
+        return fetch(`${this.baseUrl}?ids=${ids}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+    }
+
+
 };
+const todoRepository = new TodoRepository();
 
 export default todoRepository;

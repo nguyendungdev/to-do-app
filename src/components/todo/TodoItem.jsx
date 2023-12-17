@@ -1,8 +1,5 @@
-import { Card, Text, Button, ButtonGroup, Avatar, ResourceItem, Badge } from '@shopify/polaris';
+import { Text, Button, ButtonGroup, ResourceItem, Badge } from '@shopify/polaris';
 import "./style.scss"
-import { useState, useCallback } from "react";
-import todoRepository from '../../api/repositories/TodoRepository';
-
 
 
 function Todo({ item, handleCompleteClick, handleDeleteTodo }) {
@@ -10,7 +7,6 @@ function Todo({ item, handleCompleteClick, handleDeleteTodo }) {
   return (
     <ResourceItem
       id={item.id}
-      sortOrder={item.id}
       accessibilityLabel={`View details for ${name}`}
     >
 
@@ -21,16 +17,13 @@ function Todo({ item, handleCompleteClick, handleDeleteTodo }) {
       <ButtonGroup>
         {isCompleted ? (
           <Badge tone="success">Done</Badge>
-        ) : (
-          <Badge>Pending</Badge>
-
-        )}
-        <Button tone="critical" onClick={handleCompleteClick} disabled={item.isCompleted}>Complete</Button>
+        ) : (<Badge>Pending</Badge>)}
+        <Button tone="critical" onClick={handleCompleteClick}>Complete</Button>
         <Button variant="primary" tone="critical" onClick={handleDeleteTodo}>Delete</Button>
       </ButtonGroup>
 
     </ResourceItem>
   );
 
-};
+}
 export default Todo;

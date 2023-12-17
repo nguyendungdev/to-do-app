@@ -14,8 +14,6 @@ const ListTodoPage = () => {
     const [isCreate, setIsCreate] = useState(false);
     const [selectedItems, setSelectedItems] = useState([]);
     const [value, setValue] = useState();
-    // const [isDisable, setIsDisable] = useState(false);
-
 
     const handleChange = useCallback(
         (newValue) => setValue(newValue),
@@ -33,12 +31,11 @@ const ListTodoPage = () => {
 
     const handleCreateTodo = async () => {
         try {
-            const response = await todoRepository.createTodo({ name: value, isCompleted: false });
+            const response = await todoRepository.createTodo({ name: value });
             if (response.success) {
-                toast.success("Thêm thành công", {
+                toast.success("Successfully added", {
                     position: toast.POSITION.TOP_RIGHT,
                 })
-
                 setTodos(prev => {
                     return [...prev, response.data]
                 })
@@ -47,7 +44,7 @@ const ListTodoPage = () => {
             setValue("");
         }
         catch (e) {
-            toast.error("Có lỗi xảy ra vui lòng thử lại!", {
+            toast.error('Something went wrong', {
                 position: toast.POSITION.TOP_RIGHT,
             });
             throw e;
@@ -55,101 +52,61 @@ const ListTodoPage = () => {
         }
     }
 
-    const handleDeleteTodo = async (id) => {
+    const handleUpdate = async (ids, isBulk = false) => {
         try {
-            const response = await todoRepository.deteleTodo(id);
+            const idList = ids.join(',');
+            const response = await todoRepository.updateStatus(idList);
             if (response.status === 200) {
-                const newTodo = todos.filter(todo => todo.id !== parseInt(id));
-                toast.success("Xóa thành công", {
+                toast.success("Successfully updated", {
                     position: toast.POSITION.TOP_RIGHT,
-                })
-                setTodos(newTodo)
-            }
-        } catch (e) {
-            toast.error("Có lỗi xảy ra vui lòng thử lại!", {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-            throw e;
-        }
-    }
-
-    const handleCompleteTodo = async (id) => {
-        try {
-            const response = await todoRepository.updateStatusTodo(id)
-            if (response.status === 200) {
-                toast.success("Cập nhật thành công", {
-                    position: toast.POSITION.TOP_RIGHT,
-                })
-                setTodos(todoList => {
-                    return todoList.map(todo => {
-                        if (todo.id === parseInt(id)) {
-                            return {
-                                ...todo,
-                                isCompleted: true
-                            }
-                        }
-                        return todo;
-                    })
                 });
-            }
-        }
-        catch (e) {
-            toast.error("Có lỗi xảy ra vui lòng thử lại!", {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-            console.error(e);
-        }
-    };
-    const handleBulkDelete = async () => {
-        try {
-            const id = selectedItems.join(',');
-            const response = await todoRepository.deleteTodoList(id)
-            if (response.status === 200) {
-                toast.success("Xóa thành công", {
-                    position: toast.POSITION.TOP_RIGHT,
-                })
-                const newTodos = todos.filter((todo) => { return !selectedItems.includes(todo.id) });
-                setTodos(newTodos);
-                setSelectedItems([]);
-            }
-        } catch (e) {
-            toast.error("Có lỗi xảy ra vui lòng thử lại!", {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-            console.error('Có lỗi xảy ra vui lòng thử lại:', e);
-        }
-    };
-
-    const handleBulkComplete = async () => {
-        try {
-            const id = selectedItems.join(',');
-            const response = await todoRepository.updateMulti(id);
-            if (response.status === 200) {
-                toast.success("Cập nhật thành công", {
-                    position: toast.POSITION.TOP_RIGHT,
-                })
-
-                const newTodos = todos.map(todo => {
-                    if (selectedItems.includes(todo.id)) {
-                        return {
-                            ...todo,
-                            isCompleted: true,
-                        };
-                    }
-                    return todo;
+                const updateFunction = (todo) => ({
+                    ...todo,
+                    isCompleted: !todo.isCompleted,
                 });
 
-                setTodos(newTodos);
-                setSelectedItems([]);
+                if (isBulk) {
+                    const newTodos = todos.map((todo) =>
+                        ids.includes(todo.id) ? updateFunction(todo) : todo
+                    );
+                    setTodos(newTodos);
+                    setSelectedItems([]);
+                } else {
+                    setTodos(
+                        (todoList) => todoList.map((todo) => (todo.id === ids[0] ? updateFunction(todo) : todo)));
+                }
             }
         }
+
         catch (e) {
-            toast.error("Có lỗi xảy ra vui lòng thử lại!", {
+            toast.error('Something went wrong', {
                 position: toast.POSITION.TOP_RIGHT,
             });
             console.error(e);
         }
     }
+
+
+    const handleDelete = async (ids) => {
+        try {
+            const idList = ids.join(',');
+            const response = await todoRepository.detele(idList);
+            if (response.status === 200) {
+                toast.success("Successfully updated", {
+                    position: toast.POSITION.TOP_RIGHT,
+                });
+                const newTodos = todos.filter((todo) => !idList.includes(todo.id));
+                setTodos(newTodos);
+                setSelectedItems([]);
+            }
+        } catch (e) {
+            console.log(e)
+            toast.error('Something went wrong', {
+                position: toast.POSITION.TOP_RIGHT,
+            });
+        }
+    }
+
 
     return (
         <Page
@@ -174,8 +131,8 @@ const ListTodoPage = () => {
                     return (
                         <Todo
                             item={data}
-                            handleCompleteClick={() => handleCompleteTodo(data.id)}
-                            handleDeleteTodo={() => handleDeleteTodo(data.id)}
+                            handleCompleteClick={() => handleUpdate([data.id])}
+                            handleDeleteTodo={() => handleDelete([data.id])}
                             isCompleted={data.isCompleted}
                         />
                     )
@@ -183,11 +140,11 @@ const ListTodoPage = () => {
                 promotedBulkActions={[
                     {
                         content: 'Complete',
-                        onAction: handleBulkComplete,
+                        onAction: () => { handleUpdate(selectedItems, true); },
                     },
                     {
                         content: 'Delete',
-                        onAction: handleBulkDelete,
+                        onAction: () => { handleDelete(selectedItems, true); }
                     },
                 ]}
                 bulkActions={[]}

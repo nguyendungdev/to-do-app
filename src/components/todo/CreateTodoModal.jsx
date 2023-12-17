@@ -1,6 +1,18 @@
 import { TextField, Modal, } from '@shopify/polaris';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function CreateTodoModal({ isCreate, toggleModal, handleCreateTodo, value, handleChange }) {
+    const createTodo = () => {
+        if (!(value.trim() === '')) {
+            handleCreateTodo();
+        } else {
+            toast.error('Todo text cannot be only spaces.', {
+                position: toast.POSITION.TOP_RIGHT,
+            });
+        }
+    };
+
     return (
         <Modal
             open={isCreate}
@@ -8,7 +20,7 @@ function CreateTodoModal({ isCreate, toggleModal, handleCreateTodo, value, handl
             title="Create Todo"
             primaryAction={{
                 content: 'Create',
-                onAction: handleCreateTodo,
+                onAction: createTodo,
             }}
             secondaryActions={{
                 content: 'Close',

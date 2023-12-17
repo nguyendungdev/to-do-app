@@ -1,6 +1,5 @@
 import env from "../../utils/env";
 
-
 class TodoRepository {
 
     constructor() {
@@ -8,7 +7,6 @@ class TodoRepository {
     }
     async getAllTodos() {
         try {
-            console.log(this.baseUrl)
             const response = await fetch(`${this.baseUrl}?sort=desc`);
             const todos = await response.json();
             return todos;
@@ -30,16 +28,7 @@ class TodoRepository {
         return createdTodo;
     }
 
-    deteleTodo(id) {
-        return fetch(`${this.baseUrl}/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-    }
-
-    deleteTodoList(ids) {
+    detele(ids) {
         return fetch(`${this.baseUrl}?ids=${ids}`, {
             method: 'DELETE',
             headers: {
@@ -48,18 +37,9 @@ class TodoRepository {
         });
     }
 
-    updateStatusTodo(id) {
-        return fetch(`${this.baseUrl}/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-    }
-
-    updateMulti(ids) {
+    updateStatus(ids) {
         return fetch(`${this.baseUrl}?ids=${ids}`, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },

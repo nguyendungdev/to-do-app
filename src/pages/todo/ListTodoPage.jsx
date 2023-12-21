@@ -1,157 +1,143 @@
 import { useState, useCallback, useEffect } from "react";
 import "./style.scss";
-import Todo from "../../components/todo/TodoItem";
-import { Page, Button, Card, ResourceList } from '@shopify/polaris';
+import { Page, Button, Card, ResourceList, Text, ButtonGroup, ResourceItem, Badge } from '@shopify/polaris';
 import CreateTodoModal from "../../components/todo/CreateTodoModal";
-import useTodoStore from "../../hooks/useTodoStore";
-import todoRepository from "../../api/repositories/TodoRepository";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import useTodo from "../../hooks/useFetchTodo";
+import { addData, updateStatus, remove } from "../../api/todoApi";
 
 
 const ListTodoPage = () => {
-    const { todos, loading: fetchLoading, setTodos } = useTodoStore();
-    const [isCreate, setIsCreate] = useState(false);
+    const {
+        todos,
+        loading: fetchLoading,
+        setLoading,
+        setTodos
+    } = useTodo("/todo");
     const [selectedItems, setSelectedItems] = useState([]);
-    const [value, setValue] = useState();
+    const [isOpen, setIsOpen] = useState(false);
+    const toggleModal = useCallback(() => setIsOpen((opened) => !opened), []);
 
-    const handleChange = useCallback(
-        (newValue) => setValue(newValue),
-        [],
-    );
-    const resourceName = {
-        singular: 'to-do',
-        plural: 'to-do',
-    };
-    const toggleModal = useCallback(() => setIsCreate((active) => !active), []);
-
-    function resolveItemIds({ id }) {
-        return id;
-    }
-
-    const handleCreateTodo = async () => {
+    const handleCreateTodo = async (value) => {
         try {
-            const response = await todoRepository.createTodo({ name: value });
-            if (response.success) {
-                toast.success("Successfully added", {
-                    position: toast.POSITION.TOP_RIGHT,
-                })
+            setLoading(true)
+            const response = await addData('/todo', { name: value });
+            console.log(response.data)
+            if (response.status == 201) {
                 setTodos(prev => {
-                    return [...prev, response.data]
+                    return [...prev, response.data.todo]
                 })
             }
-            toggleModal();
-            setValue("");
         }
         catch (e) {
-            toast.error('Something went wrong', {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-            throw e;
-
-        }
-    }
-
-    const handleUpdate = async (ids, isBulk = false) => {
-        try {
-            const idList = ids.join(',');
-            const response = await todoRepository.updateStatus(idList);
-            if (response.status === 200) {
-                toast.success("Successfully updated", {
-                    position: toast.POSITION.TOP_RIGHT,
-                });
-                const updateFunction = (todo) => ({
-                    ...todo,
-                    isCompleted: !todo.isCompleted,
-                });
-
-                if (isBulk) {
-                    const newTodos = todos.map((todo) =>
-                        ids.includes(todo.id) ? updateFunction(todo) : todo
-                    );
-                    setTodos(newTodos);
-                    setSelectedItems([]);
-                } else {
-                    setTodos(
-                        (todoList) => todoList.map((todo) => (todo.id === ids[0] ? updateFunction(todo) : todo)));
-                }
-            }
-        }
-
-        catch (e) {
-            toast.error('Something went wrong', {
-                position: toast.POSITION.TOP_RIGHT,
-            });
             console.error(e);
         }
-    }
+        finally {
+            setLoading(false)
+            toggleModal();
+        }
+    };
 
+    const handleUpdate = async (ids) => {
+        try {
+            setLoading(true);
+            const response = await updateStatus('/todo', { ids });
+            if (response.status === 200) {
+                const updateTodos = todos.map((todo) => {
+                    if (ids.includes(todo.id)) {
+                        return {
+                            ...todo,
+                            isCompleted: true,
+                        };
+                    }
+                    return todo;
+                })
+                setTodos(updateTodos);
+
+            }
+        }
+        catch (e) {
+            console.error(e);
+        }
+        finally {
+            setLoading(false);
+            setSelectedItems([]);
+
+        }
+    }
 
     const handleDelete = async (ids) => {
         try {
+            setLoading(true);
+
             const idList = ids.join(',');
-            const response = await todoRepository.detele(idList);
+            const response = await remove(`todo?ids=${idList}`);
             if (response.status === 200) {
-                toast.success("Successfully updated", {
-                    position: toast.POSITION.TOP_RIGHT,
-                });
                 const newTodos = todos.filter((todo) => !idList.includes(todo.id));
                 setTodos(newTodos);
                 setSelectedItems([]);
             }
         } catch (e) {
-            console.log(e)
-            toast.error('Something went wrong', {
-                position: toast.POSITION.TOP_RIGHT,
-            });
+            console.error(e);
+        } finally {
+            setLoading(false)
         }
     }
 
+    const renderItem = (data) => {
+        const { id, name, isCompleted } = data;
+        return (
+            <ResourceItem
+                id={id}
+                key={id + isCompleted}
+                accessibilityLabel={`View details for ${name}`}
+            >
+                <Text variant="bodyMd" fontWeight="light" as="h3">
+                    {name}
+                </Text>
+                <ButtonGroup>
+                    {isCompleted ? (
+                        <Badge tone="success">Done</Badge>
+                    ) : (<Badge>Pending</Badge>)}
+                    <Button tone="critical" onClick={() => handleUpdate([id])} disabled={isCompleted}>
+                        {isCompleted ? 'Completed' : 'Complete'}
+                    </Button>
+                    <Button variant="primary" tone="critical" onClick={() => handleDelete([id])}>Delete</Button>
+                </ButtonGroup>
+
+            </ResourceItem>
+        );
+    }
 
     return (
-        <Page
-            title="To-do"
-            primaryAction={<Button onClick={() => setIsCreate(true)}>Create todo</Button>}
-        >
+        <Page title="To-dos" primaryAction={<Button onClick={() => setIsOpen(true)}>Create todo</Button>}>
             <CreateTodoModal
-                isCreate={isCreate}
-                toggleModal={toggleModal}
-                handleCreateTodo={handleCreateTodo}
-                handleChange={handleChange}
-                value={value}
+                isOpen={isOpen}
+                handleSubmit={handleCreateTodo}
+                handleChange={toggleModal}
             />
-            <ResourceList
-                resourceName={resourceName}
-                loading={fetchLoading}
-                items={todos}
-                selectable={true}
-                selectedItems={selectedItems}
-                onSelectionChange={setSelectedItems}
-                renderItem={(data) => {
-                    return (
-                        <Todo
-                            item={data}
-                            handleCompleteClick={() => handleUpdate([data.id])}
-                            handleDeleteTodo={() => handleDelete([data.id])}
-                            isCompleted={data.isCompleted}
-                        />
-                    )
-                }}
-                promotedBulkActions={[
-                    {
-                        content: 'Complete',
-                        onAction: () => { handleUpdate(selectedItems, true); },
-                    },
-                    {
-                        content: 'Delete',
-                        onAction: () => { handleDelete(selectedItems, true); }
-                    },
-                ]}
-                bulkActions={[]}
-                resolveItemId={resolveItemIds}
-            />
+            <Card>
+                <ResourceList
+                    resourceName={{ singular: 'to-do', plural: 'to-dos', }}
+                    loading={fetchLoading}
+                    items={todos}
+                    selectable={true}
+                    selectedItems={selectedItems}
+                    onSelectionChange={setSelectedItems}
+                    renderItem={renderItem}
+                    promotedBulkActions={[
+                        {
+                            content: 'Complete',
+                            onAction: () => { handleUpdate(selectedItems); },
+                        },
+                        {
+                            content: 'Delete',
+                            onAction: () => { handleDelete(selectedItems) }
+                        },
+                    ]}
+                    bulkActions={[]}
+                />
+            </Card>
         </Page >
     )
 }
-
 export default ListTodoPage;

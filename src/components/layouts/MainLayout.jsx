@@ -17,9 +17,8 @@ function MainLayout() {
         console.log('toggle navigation visibility');
     }, []);
     const logo = {
-        topBarSource:
-            'https://ww2.freelogovectors.net/wp-content/uploads/2022/06/avada-logo-freelogovectors.net_.png',
-        width: 86,
+        topBarSource: 'https://cdn1.avada.io/logo/avada_logo_final_color.png',
+        width: 100,
         url: '',
         accessibilityLabel: 'Shopify',
     };

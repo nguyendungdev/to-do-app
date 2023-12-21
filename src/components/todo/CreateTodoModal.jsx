@@ -1,38 +1,53 @@
-import { TextField, Modal, } from '@shopify/polaris';
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { TextField, Modal, FormLayout, Form } from '@shopify/polaris';
+import { useState, useCallback, useEffect } from "react";
 
-function CreateTodoModal({ isCreate, toggleModal, handleCreateTodo, value, handleChange }) {
-    const createTodo = () => {
-        if (!(value.trim() === '')) {
-            handleCreateTodo();
-        } else {
-            toast.error('Todo text cannot be only spaces.', {
-                position: toast.POSITION.TOP_RIGHT,
-            });
+
+function CreateTodoModal({
+    isOpen,
+    handleChange = () => { },
+    handleSubmit = () => { }
+}) {
+    const [value, setValue] = useState();
+    const handleChangeText = useCallback((newValue) => setValue(newValue), [],);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setValue("");
         }
-    };
+    }, [isOpen]);
+
 
     return (
         <Modal
-            open={isCreate}
-            onClose={toggleModal}
+            open={isOpen}
+            onClose={handleChange}
             title="Create Todo"
             primaryAction={{
                 content: 'Create',
-                onAction: createTodo,
+                onAction: () => handleSubmit(value, setValue),
+                disabled: !value
             }}
             secondaryActions={{
                 content: 'Close',
-                onAction: toggleModal,
+                onAction: handleChange,
             }}
         >
             <Modal.Section>
-                <TextField
-                    value={value}
-                    onChange={handleChange}
-                    autoComplete="off"
-                />
+                <Form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSubmit(value, setValue);
+                    }}
+                >
+                    <FormLayout>
+                        <TextField
+                            placeholder="Todo name"
+                            value={value}
+                            onChange={handleChangeText}
+                            autoComplete="off"
+                        />
+                    </FormLayout>
+                </Form>
             </Modal.Section >
         </Modal >
     )
